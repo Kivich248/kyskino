@@ -455,3 +455,91 @@ Core* create_sharp_x_core()
 
 	return core;
 }
+
+
+Core* create_edge_x_core()   //функция применения фильра edge
+{
+    Core* Core = malloc(sizeof(Core));
+    if (Core == NULL) return NULL;
+    
+    Core->size = 3;
+    Core->divisor = 0.0f;
+    
+    // Создаем матрицу ядра
+    Core->core = malloc(Core->size * sizeof(float*));
+    if (Core->core == NULL) {
+        free(Core);
+        return NULL;
+    }
+    
+    for (int i = 0; i < Core->size; i++) {
+        Core->core[i] = malloc(Core->size * sizeof(float));
+        if (Core->core[i] == NULL) {
+            for (int j = 0; j < i; j++) free(Core->core[j]);
+            free(Core->core);
+            free(Core);
+            return NULL;
+        }
+    }
+    
+    
+    float sobel_x[3][3] = { //матрица фильра
+        {0.0f, -1.0f, 0.0f},
+        {-1.0f, 4.0f, -1.0f},
+        {0.0f, -1.0f, 0.0f}
+    };
+    
+    for (int i = 0; i < Core->size; i++) {
+        for (int j = 0; j < Core->size; j++) {
+            Core->core[i][j] = sobel_x[i][j];
+        }
+    }
+    
+    return Core;
+}
+
+Core* create_gauss_x_core() //функция применения размытия гаусса
+{
+    Core* Core = malloc(sizeof(Core));
+    if (Core == NULL) return NULL;
+    
+    Core->size = 7;
+    Core->divisor = 1003.0f;
+    
+    // Создаем матрицу ядра
+    Core->core = malloc(Core->size * sizeof(float*));
+    if (Core->core == NULL) {
+        free(Core);
+        return NULL;
+    }
+    
+    for (int i = 0; i < Core->size; i++) {
+        Core->core[i] = malloc(Core->size * sizeof(float));
+        if (Core->core[i] == NULL) {
+            for (int j = 0; j < i; j++) free(Core->core[j]);
+            free(Core->core);
+            free(Core);
+            return NULL;
+        }
+    }
+    
+    
+    float sobel_x[7][7] = {                                         //матрица фильтра
+        { 0.0f,   0.0f,   1.0f,   2.0f,   1.0f,   0.0f,   0.0f },
+		{ 0.0f,   3.0f,  13.0f,  22.0f,  13.0f,   3.0f,   0.0f},
+		{ 1.0f,  13.0f,  59.0f,  97.0f,  59.0f,  13.0f,   1.0f },
+		{ 2.0f,  22.0f,  97.0f, 159.0f,  97.0f,  22.0f,   2.0f },
+		{ 1.0f,  13.0f,  59.0f,  97.0f,  59.0f,  13.0f,   1.0f },
+		{ 0.0f,   3.0f,  13.0f,  22.0f,  13.0f,   3.0f,   0.0f },
+		{ 0.0f,   0.0f,   1.0f,   2.0f,   1.0f,   0.0f,   0.0f },
+    };
+    
+    for (int i = 0; i < Core->size; i++) {
+        for (int j = 0; j < Core->size; j++) {
+            Core->core[i][j] = sobel_x[i][j];
+        }
+    }
+    
+    return Core;
+}
+
