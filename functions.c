@@ -343,7 +343,7 @@ int write_bmp(const char* output_file, Image* img)
 }
 
 
-Image apply_core(Image* img, Core* core)
+Image* apply_core(Image* img, Core* core)
 {
 	int width = img->width;
 	int height = img->height;
@@ -383,7 +383,7 @@ Image apply_core(Image* img, Core* core)
 				for (int x_с = 0; x_с < ksize; x_с++)
 				{
 					int y_mat = y + y_с - sdvg;
-					int x_mat = y + x_с - sdvg;
+					int x_mat = x + x_с - sdvg;
 
 					if (y_mat < 0) y_mat = 0;
 					if (y_mat >= height) y_mat = height - 1;
@@ -422,7 +422,7 @@ Image apply_core(Image* img, Core* core)
 
 Core* create_sharp_x_core()
 {
-	Core* core = malloc(sizeof(core));
+	Core* core = malloc(sizeof(Core));
 	if (core == NULL) return NULL;
 
 	core->size = 3;
@@ -462,102 +462,98 @@ Core* create_sharp_x_core()
 }
 
 
-Core* create_edge_x_core()   //функция применения фильра edge
+Core* create_edge_x_core()
 {
-    Core* Core = malloc(sizeof(Core));
-    if (Core == NULL) return NULL;
+    Core* kernel = malloc(sizeof(Core));
+    if (kernel == NULL) return NULL;
     
-    Core->size = 3;
-    Core->divisor = 0.0f;
+    kernel->size = 3;
+    kernel->divisor = 0.0f;
     
     // Создаем матрицу ядра
-    Core->core = malloc(Core->size * sizeof(float*));
-    if (Core->core == NULL) {
-        free(Core);
+    kernel->core = malloc(kernel->size * sizeof(float*));
+    if (kernel->core == NULL) {
+        free(kernel);
         return NULL;
     }
     
-    for (int i = 0; i < Core->size; i++) {
-        Core->core[i] = malloc(Core->size * sizeof(float));
-        if (Core->core[i] == NULL) {
-            for (int j = 0; j < i; j++) free(Core->core[j]);
-            free(Core->core);
-            free(Core);
+    for (int i = 0; i < kernel->size; i++) {
+        kernel->core[i] = malloc(kernel->size * sizeof(float));
+        if (kernel->core[i] == NULL) {
+            for (int j = 0; j < i; j++) free(kernel->core[j]);
+            free(kernel->core);
+            free(kernel);
             return NULL;
         }
     }
     
     
-    float sobel_x[3][3] = { //матрица фильра
-        {0.0f, -1.0f, 0.0f},
-        {-1.0f, 4.0f, -1.0f},
-        {0.0f, -1.0f, 0.0f}
+    float edge_matrix[3][3] = {
+        { 0.0f, -1.0f,  0.0f},
+        {-1.0f,  4.0f, -1.0f},
+        { 0.0f, -1.0f,  0.0f}
     };
     
-    for (int i = 0; i < Core->size; i++) {
-        for (int j = 0; j < Core->size; j++) {
-            Core->core[i][j] = sobel_x[i][j];
+    for (int i = 0; i < kernel->size; i++) {
+        for (int j = 0; j < kernel->size; j++) {
+            kernel->core[i][j] = edge_matrix[i][j];
         }
     }
     
-    return Core;
+    return kernel;
 }
 
 
-Core* create_gauss_x_core(float sigma) //функция применения размытия гаусса
+Core* create_gauss_x_core(float sigma)
 {
-	Core* Core = malloc(sizeof(Core));
-	if (Core == NULL) return NULL;
+    Core* kernel = malloc(sizeof(Core));
+    if (kernel == NULL) return NULL;
 
-	Core->size = 7;
-	Core->divisor = 0;
+    kernel->size = 7;
+    kernel->divisor = 0.0f;
 
-	// Создаем матрицу ядра
-	Core->core = malloc(Core->size * sizeof(float*));
-	if (Core->core == NULL)
-	{
-		free(Core);
-		return NULL;
-	}
+    
+    kernel->core = malloc(kernel->size * sizeof(float*));
+    if (kernel->core == NULL) {
+        free(kernel);
+        return NULL;
+    }
 
-	for (int i = 0; i < Core->size; i++)
-	{
-		Core->core[i] = malloc(Core->size * sizeof(float));
-		if (Core->core[i] == NULL)
-		{
-			for (int j = 0; j < i; j++) free(Core->core[j]);
-			free(Core->core);
-			free(Core);
-			return NULL;
-		}
-	}
+    for (int i = 0; i < kernel->size; i++) {
+        kernel->core[i] = malloc(kernel->size * sizeof(float));
+        if (kernel->core[i] == NULL) {
+            for (int j = 0; j < i; j++) free(kernel->core[j]);
+            free(kernel->core);
+            free(kernel);
+            return NULL;
+        }
+    }
 
-	float sum = 0;
+    float sum = 0.0f;
+    int half_size = kernel->size / 2;  // 3 для размера 7
 
-	for (int i = -3; i <= 3; i++)
-	{
-		for (int j = -3; j <= 3; j++)
-		{
-			float znach = exp(-(i*i + j*j) / (2 * sigma * sigma));
-			Core->core[i+3][j+3] = znach;
-			sum = sum + znach;
-		}
-	}
+    // Заполняем значениями функции Гаусса
+    for (int i = -half_size; i <= half_size; i++) {
+        for (int j = -half_size; j <= half_size; j++) {
+            float value = expf(-(i*i + j*j) / (2.0f * sigma * sigma));
+            kernel->core[i + half_size][j + half_size] = value;
+            sum += value;
+        }
+    }
 
-	for (int i = 0; i < 7; i++)
-	{
-		for (int j = 0; j < 7; j++)
-		{
-			Core->core[i][j] = Core->core[i][j] / sum;
-		}
-	}
+    // Нормализуем
+    for (int i = 0; i < kernel->size; i++) {
+        for (int j = 0; j < kernel->size; j++) {
+            kernel->core[i][j] /= sum;
+        }
+    }
 
-	return Core;
+    return kernel;
 }
 
 
 
-int** create_matrix(n) {
+int** create_matrix(int n) {
     int **matrix = (int**)malloc(n * sizeof(int*));
     if (matrix == NULL) {
         printf("Ошибка выделения памяти!\n");
@@ -583,6 +579,7 @@ int** create_matrix(n) {
             matrix[i][j] = 0;
         }
     }
+    return matrix;
 }
 
 
@@ -623,6 +620,7 @@ void sort_matrix(int **matrix, int n) {
     }
     
     free(linear);
+    
 }
 
 

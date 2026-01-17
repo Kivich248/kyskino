@@ -57,12 +57,14 @@ Image* Grey(Image* img)
 			uint8_t r = img->pixels[y][x].r;
 			uint8_t g = img->pixels[y][x].g;
 			uint8_t b = img->pixels[y][x].b;
-			float x = 0.299 * r + 0.587 * g + 0.114 * b;
-			img->pixels[y][x].r = round(x);
-			img->pixels[y][x].g = round(x);
-			img->pixels[y][x].b = round(x);
+			float gray_value = 0.299f * r + 0.587f * g + 0.114f * b; 
+            uint8_t gray = (uint8_t)roundf(gray_value);
+            img->pixels[y][x].r = gray;
+            img->pixels[y][x].g = gray;
+            img->pixels[y][x].b = gray;
 		}
 	}
+	return img;
 }
 
 
@@ -82,13 +84,14 @@ Image* Negro(Image* img)
             img->pixels[y][x].b = 255 - b;
         }
     }
+	return img;
 }
 
 
 Image* Sharp(Image* img)
 {
 	Core* sharp_core = create_sharp_x_core();
-	Image img_return = apply_core(img, sharp_core);
+	Image* img_return = apply_core(img, sharp_core);
 	return img_return;
 }
 
@@ -99,26 +102,27 @@ Image* Edge(Image* img, float threshold)
 	int width = img->width;
 	img = Grey(img);
 	Core* edge_core = create_edge_x_core();
-	Image img_return = apply_core(img, edge_core);
+	Image* img_return = apply_core(img, edge_core);
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
 		{
-			int gray = img_return.pixels[y][x].r;
+			int gray = img_return->pixels[y][x].r;
 			if (gray - threshold * 255 > 0)
 			{
-				img->pixels[y][x].r = 255;
-				img->pixels[y][x].g = 255;
-				img->pixels[y][x].b = 255;
+				img_return->pixels[y][x].r = 255;
+				img_return->pixels[y][x].g = 255;
+				img_return->pixels[y][x].b = 255;
 			}
 			if (gray - threshold * 255 < 0)
 			{
-				img->pixels[y][x].r = 0;
-				img->pixels[y][x].g = 0;
-				img->pixels[y][x].b = 0;
+				img_return->pixels[y][x].r = 0;
+				img_return->pixels[y][x].g = 0;
+				img_return->pixels[y][x].b = 0;
 			}
 		}
 	}
+	return img_return;
 }
 
 
@@ -183,9 +187,14 @@ Image* Median(Image* img, int window) {				//медианный фильтр
 			result->pixels[y][x].r = r;
 			result->pixels[y][x].g = g;
 			result->pixels[y][x].b = b;
-			free(mat_r);
-			free(mat_g);
-			free(mat_b);
+			for (int i = 0; i < window; i++) {
+    free(mat_r[i]);
+    free(mat_g[i]);
+    free(mat_b[i]);
+}
+free(mat_r);
+free(mat_g);
+free(mat_b);
 
 		}
 	}
@@ -196,6 +205,6 @@ Image* Median(Image* img, int window) {				//медианный фильтр
 Image* Gaussian_Blur(Image* img, float sigma)
 {
 	Core* gauss_core = create_gauss_x_core(sigma);
-	Image img_return = apply_core(img, gauss_core);
+	Image* img_return = apply_core(img, gauss_core);
 	return img_return;
 }

@@ -28,7 +28,7 @@ typedef struct
 	float divisor;   // делитель для нормализации
 } Core;
 
-Image Crop(Image* img, int width, int height);
+Image* Crop(Image* img, int width, int height);
 Image* Grey(Image* img);
 Image* Negro(Image* img);
 Image* Sharp(Image* img);

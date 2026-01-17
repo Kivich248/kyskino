@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         printf("введи правильную команду\n");
         return 1;
     }
-    write_bmp(argv[2], img);
+    write_bmp(argv[2], img_got);
     destroy_image(img);
     return 0;
 }
