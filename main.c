@@ -33,18 +33,18 @@ int main(int argc, char *argv[])
     const char *input_file = argv[1];
     const char *output_file = argv[2];
 
-    
     Image* img = read_bmp(input_file);
-    if (img == NULL) {
+    if (img == NULL)
+    {
         printf("печально\n");
         return 1;
     }
 
-    
-    if (argc == 3) {
-       
+    if (argc == 3)
+    {
         int result = write_bmp(output_file, img);
-        if (!result) {
+        if (!result)
+        {
             printf("грустно'\n", output_file);
             destroy_image(img);
             return 1;
@@ -52,46 +52,65 @@ int main(int argc, char *argv[])
         destroy_image(img);
         return 0;
     }
+
 	int width = img->width;
 	int height = img->height;
-    
-    
+
 	Image* img_got = create_image(width, height);
     int i = 3;
-    while (i < argc) {
-       
-        if (strcmp(argv[i], "-grey") == 0 ) {
-            img_got = Grey(img);
-        }
-        else if (strcmp(argv[i], "-negro") == 0) {
-            img_got = Negro(img);
-        }
-        else if (strcmp(argv[i], "-sharp") == 0) {
-            img_got = Sharp(img);
-        }
-        else if (strcmp(argv[i], "-median") == 0 && argc > i+1 && isdigit(argv[i+1])) {
-            int window = atoi(argv[i+1]);
-            img_got = Median(img, window);
-        }
-        else if (strcmp(argv[i], "-crop") == 0 && argc > i+2 && isdigit(argv[i+1]) && isdigit(argv[i+2])) {
+    while (i < argc)
+    {
+        if (strcmp(argv[i], "-crop") == 0 && argc > i+1 && is_valid_number(argv[i+1]) && is_valid_number(argv[i+2]))
+        {
             int w = atoi(argv[i+1]);
             int h = atoi(argv[i+2]);
             img_got = Crop(img, w, h);
-            
-        }else {
-			printf("введи правильную команду\n");
-			return 1;
-		}
-    
-
-    
+            i = i + 3;
+            continue;
+        }
+        if (strcmp(argv[i], "-gs") == 0 )
+        {
+            img_got = Grey(img);
+            i = i + 1;
+            continue;
+        }
+        if (strcmp(argv[i], "-neg") == 0)
+        {
+            img_got = Negro(img);
+            i = i + 1;
+            continue;
+        }
+        if (strcmp(argv[i], "-sharp") == 0)
+        {
+            img_got = Sharp(img);
+            i = i + 1;
+            continue;
+        }
+        if (strcmp(argv[i], "-edge") == 0 && argc > i && is_valid_number(argv[i+1]))
+        {
+            float threshold = string_to_float(argv[i+1]);
+            img_got = Edge(img, threshold);
+            i = i + 1;
+            continue;
+        }
+        if (strcmp(argv[i], "-med") == 0 && argc > i && is_valid_number(argv[i+1]))
+        {
+            int window = atoi(argv[i+1]);
+            img_got = Median(img, window);
+            i = i + 2;
+            continue;
+        }
+        if (strcmp(argv[i], "-blur") == 0 && argc > i && is_valid_number(argv[i+1]))
+        {
+            float sigma = string_to_float(argv[i+1]);
+            img_got = Gaussian_Blur(img, sigma);
+            i = i + 2;
+            continue;
+        }
+        printf("введи правильную команду\n");
+        return 1;
+    }
     write_bmp(argv[2], img);
-    
- 
     destroy_image(img);
-    
-    
-}
-
     return 0;
-} //допиши едж и гаусс, хз что с эджем делать, потому что атой  этом случае не работает...
+}

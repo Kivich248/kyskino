@@ -191,3 +191,11 @@ Image* Median(Image* img, int window) {				//медианный фильтр
 	}
 	return result;
 }
+
+
+Image* Gaussian_Blur(Image* img, float sigma)
+{
+	Core* gauss_core = create_gauss_x_core(sigma);
+	Image img_return = apply_core(img, gauss_core);
+	return img_return;
+}

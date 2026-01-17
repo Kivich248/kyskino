@@ -1,6 +1,7 @@
 #ifndef LABA3_FUNCTIONS_H
 #define LABA3_FUNCTIONS_H
-
+#include <ctype.h>
+#include <stdbool.h>
 typedef struct {
 	uint8_t r;
 	uint8_t g;
@@ -32,5 +33,7 @@ Core* create_edge_x_core();
 Core* create_gauss_x_core(float sigma);
 int** create_matrix(n);
 void sort_matrix(int **matrix, int n);
+bool is_valid_number(const char *str);
+float string_to_float(const char *str);
 
 #endif //LABA3_FUNCTIONS_H

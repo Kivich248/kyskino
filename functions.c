@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include "filters.h"
 #include "functions.h"
+#include <ctype.h>
+#include <stdbool.h>
+#include <tgmath.h>
 
 // Пиксель: RGB, каждый компонент — uint8_t (0..255)
 typedef struct {
@@ -620,4 +623,86 @@ void sort_matrix(int **matrix, int n) {
     }
     
     free(linear);
+}
+
+
+bool is_valid_number(const char *str)
+{
+	if (!str || *str == '\0')
+	{
+		return false; // Пустая строка не является числом
+	}
+
+	int i = 0;
+	bool has_decimal_point = false;
+
+	// Обработка знака
+	if (str[i] == '-' || str[i] == '+') i++;
+
+	// Если после знака сразу точка — строка всё равно может быть валидной ("+.5")
+	if (str[i] == '.')
+	{
+		has_decimal_point = true;
+		i++;
+	}
+
+	bool has_digits = false;
+
+	while (str[i] != '\0')
+	{
+		if (isdigit(str[i]))
+		{
+			has_digits = true;
+		} else if (str[i] == '.')
+		{
+			if (has_decimal_point)
+			{
+				return false; // Вторая точка недопустима
+			}
+			has_decimal_point = true;
+		} else
+		{
+			return false; // Недопустимый символ
+		}
+		i++;
+	}
+	return has_digits; // Должна быть хотя бы одна цифра
+}
+
+float string_to_float(const char *str)
+{
+	if (!str || !is_valid_number(str)) { // Предполагается, что is_valid_number объявлена выше
+		return 0.0f; // Возвращаем 0.0f, если строка не валидна
+	}
+
+	int i = 0;
+	float result = 0.0f;
+	float fraction = 0.1f;
+	bool negative = false;
+
+	// Обработка знака
+	if (str[i] == '-' || str[i] == '+') {
+		if (str[i] == '-') {
+			negative = true;
+		}
+		i++;
+	}
+
+	// Обработка целой части
+	while (str[i] != '\0' && isdigit(str[i])) {
+		result = result * 10.0f + (float)(str[i] - '0');
+		i++;
+	}
+
+	// Если есть точка — обрабатываем дробную часть
+	if (str[i] == '.') {
+		i++; // Переходим к первому символу после точки
+		while (str[i] != '\0' && isdigit(str[i])) {
+			result += (float)(str[i] - '0') * fraction;
+			fraction *= 0.1f;
+			i++;
+		}
+	}
+
+	return negative ? -result : result;
 }
